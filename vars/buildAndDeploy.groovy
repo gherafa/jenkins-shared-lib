@@ -14,7 +14,7 @@ def call(Map config = [:]) {
     def branch = config.branch ?: "master"
 
     // Load the declarative pipeline from resources
-    def pipelineScript = libraryResource('buildAndDeployPipeline.groovy')
+    def pipelineScript = libraryResource('buildAndDeployScript.groovy')
 
     // Replace placeholders in the pipeline with actual values
     pipelineScript = pipelineScript
