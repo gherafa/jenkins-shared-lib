@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'docker:24-dind'
+            image 'lachlanevenson/k8s-kubectl:latest' // has kubectl preinstalled
             args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
