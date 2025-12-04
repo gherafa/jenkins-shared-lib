@@ -56,7 +56,7 @@ def call(Map config = [:]) {
             stage('Checkout Deployment Repo') {
                 steps {
                     dir('deployments') {
-                        git url: config.deployRepo, branch: 'main'
+                        git url: config.deployRepo, branch: 'master'
                     }
                 }
             }
