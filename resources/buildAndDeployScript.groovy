@@ -70,10 +70,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                    export PATH=$PATH:/usr/local/bin
-                    kubectl apply -f deployment-generated.yaml
-                '''
+                sh 'kubectl apply -f deployment-generated.yaml'
             }
         }
     }
