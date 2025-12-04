@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'lachlanevenson/k8s-kubectl:latest' // has kubectl preinstalled
+            image 'docker:24-dind'
             args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
@@ -69,8 +69,11 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
-                sh 'kubectl apply -f deployment-generated.yaml'
+           steps {
+                sh '''
+                docker run --rm -v $PWD:/workspace -v $HOME/.kube:/root/.kube lachlanevenson/k8s-kubectl:latest \
+                kubectl apply -f /workspace/deployment-generated.yaml
+                '''
             }
         }
     }
