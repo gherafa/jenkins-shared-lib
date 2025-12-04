@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = "ghcr.io/${config.org}"
-        IMAGE = "${REGISTRY}/${config.repo}"
-        TAG = "${config.tag ?: 'latest'}"
+        REGISTRY       = '__REGISTRY__'
+        IMAGE          = '__IMAGE__'
+        TAG            = '__TAG__'
     }
 
     stages {
@@ -36,7 +36,7 @@ pipeline {
         stage('Login to GHCR') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: config.ghcrCreds,
+                    credentialsId: '__GHCR_CREDS__',
                     usernameVariable: 'GH_USER',
                     passwordVariable: 'GH_PAT'
                 )]) {
@@ -54,7 +54,7 @@ pipeline {
         stage('Checkout Deployment Repo') {
             steps {
                 dir('deployments') {
-                    git url: config.deployRepo, branch: 'master'
+                    git url: '__DEPLOY_REPO__', branch: 'master'
                 }
             }
         }
@@ -62,8 +62,8 @@ pipeline {
         stage('Generate Deployment YAML') {
             steps {
                 script {
-                    def path = "deployments/${config.deployPath}/deployment.yaml"
-                    def yaml = readFile(path)
+                    def deploymentPath = "deployments/__DEPLOY_PATH__/deployment.yaml"
+                    def yaml = readFile(deploymentPath)
 
                     def newYaml = yaml.replaceAll(
                         "(image:\\s*)(.*)",
