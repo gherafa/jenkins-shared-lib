@@ -1,12 +1,15 @@
 def call(Map config = [:]) {
+    def registry = "ghcr.io/${config.org}"
+    def image = "${registry}/${config.repo}"
+    def tag = config.tag ?: "latest"
 
     pipeline {
         agent any
 
         environment {
-            REGISTRY = "ghcr.io/${config.org}"
-            IMAGE = "${REGISTRY}/${config.repo}"
-            TAG = config.tag ?: "latest"
+            REGISTRY = "${registry}"
+            IMAGE = "${image}"
+            TAG = "${tag}"
         }
 
         stages {
@@ -42,7 +45,7 @@ def call(Map config = [:]) {
                         usernameVariable: 'GH_USER',
                         passwordVariable: 'GH_PAT'
                     )]) {
-                        sh "echo $GH_PAT | docker login ghcr.io -u $GH_USER --password-stdin"
+                        sh "echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin"
                     }
                 }
             }
