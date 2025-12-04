@@ -1,9 +1,9 @@
 pipeline {
     agent {
-      docker {
-          image 'docker:24-dind'
-          args '-v /var/run/docker.sock:/var/run/docker.sock'
-      }
+        docker {
+            image 'docker:24-dind'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
     }
 
     environment {
@@ -70,7 +70,10 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh "kubectl apply -f deployment-generated.yaml"
+                sh '''
+                    export PATH=$PATH:/usr/local/bin
+                    kubectl apply -f deployment-generated.yaml
+                '''
             }
         }
     }
