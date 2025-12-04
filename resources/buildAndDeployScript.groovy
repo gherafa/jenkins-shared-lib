@@ -11,7 +11,7 @@ pipeline {
 
         stage('Checkout App Code') {
             steps {
-                checkout scm
+                git branch: '__APP_BRANCH__', url: '__APP_REPO_URL__'
             }
         }
 
