@@ -68,11 +68,14 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
-           steps {
+       stage('Deploy to Kubernetes') {
+            steps {
                 sh '''
-                docker run --rm -v $PWD:/workspace -v $HOME/.kube:/root/.kube lachlanevenson/k8s-kubectl:latest \
-                kubectl apply -f /workspace/deployment-generated.yaml
+                docker run --rm \
+                    -v $PWD:/workspace \
+                    -v $HOME/.kube:/root/.kube \
+                    lachlanevenson/k8s-kubectl:latest \
+                    apply -f /workspace/deployment-generated.yaml
                 '''
             }
         }
