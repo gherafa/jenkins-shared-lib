@@ -43,35 +43,5 @@ pipeline {
                 sh "docker push ${IMAGE}:${TAG}"
             }
         }
-
-        stage('Checkout Deployment Repo') {
-            steps {
-                dir('deployments') {
-                    git url: '__DEPLOY_REPO__', branch: 'master'
-                }
-            }
-        }
-
-        stage('Generate Deployment YAML') {
-            steps {
-                script {
-                    def deploymentPath = "deployments/__DEPLOY_PATH__/deployment.yaml"
-                    def yaml = readFile(deploymentPath)
-
-                    def newYaml = yaml.replaceAll(
-                        "(image:\\s*)(.*)",
-                        "\$1${IMAGE}:${TAG}"
-                    )
-
-                    writeFile(file: "deployment-generated.yaml", text: newYaml)
-                }
-            }
-        }
-
-       stage('Deploy to Kubernetes') {
-            steps {
-                sh 'kubectl apply -f /workspace/deployment-generated.yaml'
-            }
-        }
     }
 }
