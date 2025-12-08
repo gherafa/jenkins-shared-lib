@@ -7,31 +7,12 @@ pipeline {
     }
 
     environment {
-        REGISTRY       = '__REGISTRY__'
-    }
-
-    parameters {
-        choice(name: 'SERVICE_NAME', choices: ['ai-llm-learn-japanese-service', 'vue-japanese-speech-recog-app', 'java-spring-transactions'], description: 'Select service')
-        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
-        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
+        REGISTRY = '__REGISTRY__',
+        SERVICE_NAME = '__SERVICE_NAME__',
+        IMAGE_TAG = '__IMAGE_TAG__',
     }
 
     stages {
-        stage('Select Repo') {
-            steps {
-                script {
-                    def repos = [
-                        'ai-llm-learn-japanese-service': 'https://github.com/gherafa/ai-llm-learn-japanese-service.git',
-                        'vue-japanese-speech-recog-app': 'https://github.com/gherafa/vue-japanese-speech-recog-app.git',
-                        'java-spring-transactions': 'https://github.com/gherafa/java-spring-transactions.git',
-                    ]
-
-                    env.SELECTED_REPO = repos[params.SERVICE_NAME]
-                    echo "Selected repo: ${env.SELECTED_REPO}"
-                }
-            }
-        }
-
          stage('Detect Language') {
             steps {
                 script {
@@ -50,7 +31,7 @@ pipeline {
 
         stage('Checkout App Code') {
             steps {
-                git branch: '__APP_BRANCH__', url: env.SELECTED_REPO
+                git branch: '__APP_BRANCH__', url: '__SERVICE_NAME__'
             }
         }
 
@@ -75,9 +56,11 @@ pipeline {
         }
 
         stage('Push Docker Image') {
-            sh """
-            docker push ${REGISTRY}/${SERVICE_NAME}:${IMAGE_TAG}
-            """
+            steps {
+                    sh """
+                    docker push ${REGISTRY}/${SERVICE_NAME}:${IMAGE_TAG}
+                    """
+            }
         }
     }
 }

@@ -6,16 +6,52 @@ def call(Map config = [:]) {
 
     def registry = "ghcr.io/${config.org}"
     def branch = config.branch ?: "master"
+    def service = config.service
 
     // Load the declarative pipeline from resources
     def pipelineScript = libraryResource('buildAndDeployScript.groovy')
+
+    def repos = [
+        'ai-llm-learn-japanese-service': 'https://github.com/gherafa/ai-llm-learn-japanese-service.git',
+        'vue-japanese-speech-recog-app': 'https://github.com/gherafa/vue-japanese-speech-recog-app.git',
+        'java-spring-transactions':      'https://github.com/gherafa/java-spring-transactions.git'
+    ]
 
     // Replace placeholders in the pipeline with actual values
     pipelineScript = pipelineScript
         .replace('__REGISTRY__', registry)
         .replace('__GHCR_CREDS__', config.ghcrCreds)
         .replace('__APP_BRANCH__', branch)
+        .replace('__IMAGE_TAG__', '${params.IMAGE_TAG}')
+        .replace('__SERVICE_NAME__', repos[service])
 
     // Execute the pipeline
     evaluate(pipelineScript)
+}
+
+pipeline {
+    agent any
+    parameters {
+        choice(name: 'SERVICE_NAME', choices: [
+            'ai-llm-learn-japanese-service',
+            'vue-japanese-speech-recog-app',
+            'java-spring-transactions'
+        ])
+        string(name: 'BRANCH', defaultValue: 'master')
+        string(name: 'IMAGE_TAG', defaultValue: 'latest')
+    }
+
+    stages {
+        stage('Run Build') {
+            steps {
+                buildAndDeploy(
+                    service: params.SERVICE_NAME,
+                    branch: params.BRANCH,
+                    tag: params.IMAGE_TAG,
+                    org: 'gherafa',
+                    ghcrCreds: 'ghcr-token'
+                )
+            }
+        }
+    }
 }
