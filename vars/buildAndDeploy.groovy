@@ -28,30 +28,3 @@ def call(Map config = [:]) {
     // Execute the pipeline
     evaluate(pipelineScript)
 }
-
-pipeline {
-    agent any
-    parameters {
-        choice(name: 'SERVICE_NAME', choices: [
-            'ai-llm-learn-japanese-service',
-            'vue-japanese-speech-recog-app',
-            'java-spring-transactions'
-        ])
-        string(name: 'BRANCH', defaultValue: 'master')
-        string(name: 'IMAGE_TAG', defaultValue: 'latest')
-    }
-
-    stages {
-        stage('Run Build') {
-            steps {
-                buildAndDeploy(
-                    service: params.SERVICE_NAME,
-                    branch: params.BRANCH,
-                    tag: params.IMAGE_TAG,
-                    org: 'gherafa',
-                    ghcrCreds: 'ghcr-token'
-                )
-            }
-        }
-    }
-}
