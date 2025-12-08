@@ -7,9 +7,9 @@ pipeline {
     }
 
     environment {
-        REGISTRY = '__REGISTRY__',
-        SERVICE_NAME = '__SERVICE_NAME__',
-        IMAGE_TAG = '__IMAGE_TAG__',
+        REGISTRY = '__REGISTRY__'
+        SERVICE_NAME = '__SERVICE_NAME__'
+        IMAGE_TAG = '__IMAGE_TAG__'
     }
 
     stages {
