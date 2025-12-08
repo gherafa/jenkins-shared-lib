@@ -1,15 +1,11 @@
-def call(Map config = [:]) {
+def call(Map cfg = [:]) {
 
-    // --- VALIDATION ---
-    if (!config.org)  { error "Missing config.org (GitHub org or username)" }
-    if (!config.ghcrCreds) { error "Missing config.ghcrCreds (GHCR credential ID)" }
-
-    def registry = "ghcr.io/${config.org}"
-    def branch = config.branch ?: "master"
-    def service = config.service
-
-    // Load the declarative pipeline from resources
-    def pipelineScript = libraryResource('buildAndDeployScript.groovy')
+    // Validate required fields
+    if (!cfg.service)     { error "Missing cfg.service" }
+    if (!cfg.branch)      { error "Missing cfg.branch" }
+    if (!cfg.tag)         { error "Missing cfg.tag" }
+    if (!cfg.org)         { error "Missing cfg.org (GitHub org)" }
+    if (!cfg.ghcrCreds)   { error "Missing cfg.ghcrCreds (Credential ID)" }
 
     def repos = [
         'ai-llm-learn-japanese-service': 'https://github.com/gherafa/ai-llm-learn-japanese-service.git',
@@ -17,14 +13,63 @@ def call(Map config = [:]) {
         'java-spring-transactions':      'https://github.com/gherafa/java-spring-transactions.git'
     ]
 
-    // Replace placeholders in the pipeline with actual values
-    pipelineScript = pipelineScript
-        .replace('__REGISTRY__', registry)
-        .replace('__GHCR_CREDS__', config.ghcrCreds)
-        .replace('__APP_BRANCH__', branch)
-        .replace('__IMAGE_TAG__', '${params.IMAGE_TAG}')
-        .replace('__SERVICE_NAME__', repos[service])
+    if (!repos[cfg.service]) {
+        error "Unknown service name: ${cfg.service}"
+    }
 
-    // Execute the pipeline
-    evaluate(pipelineScript)
+    def repoUrl = repos[cfg.service]
+    def imageName = "ghcr.io/${cfg.org}/${cfg.service}:${cfg.tag}"
+
+
+    // ============= STAGE 1: CHECKOUT ==================
+    stage("Checkout ${cfg.service}") {
+        git branch: cfg.branch, url: repoUrl
+    }
+
+
+    // ============= STAGE 2: DETECT LANGUAGE ==================
+    stage('Detect Project Type') {
+        script {
+            if (fileExists("package.json")) {
+                env.SERVICE_TYPE = "node"
+            } else if (fileExists("requirements.txt") || fileExists("pyproject.toml")) {
+                env.SERVICE_TYPE = "python"
+            } else {
+                env.SERVICE_TYPE = "other"
+            }
+
+            echo "Detected type: ${env.SERVICE_TYPE}"
+        }
+    }
+
+
+    // ============= STAGE 3: BUILD IMAGE ==================
+    stage("Build Docker Image") {
+        sh """
+        docker build -t ${imageName} .
+        """
+    }
+
+
+    // ============= STAGE 4: LOGIN ==================
+    stage("Login to GHCR") {
+        withCredentials([usernamePassword(
+            credentialsId: cfg.ghcrCreds,
+            usernameVariable: 'GH_USER',
+            passwordVariable: 'GH_PAT'
+        )]) {
+            sh """
+            echo \$GH_PAT | docker login ghcr.io -u \$GH_USER --password-stdin
+            """
+        }
+    }
+
+
+    // ============= STAGE 5: PUSH IMAGE ==================
+    stage("Push Image") {
+        sh """
+        docker push ${imageName}
+        """
+        echo "Pushed image: ${imageName}"
+    }
 }
